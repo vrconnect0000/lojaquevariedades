@@ -75,7 +75,7 @@
                 
                 const msgBoasVindas = encodeURIComponent(`Olá *${v.cliente_nome}*! 👋 Bem-vindo(a) à *OQUE? VARIEDADES*. Tudo bem?\n\nRecebemos seu interesse no produto *${v.itens}* e estou aqui para te ajudar a finalizar seu pedido!`);
                 const msgDados = encodeURIComponent(`📍 *FICHA DO PEDIDO - OQUE? VARIEDADES*\n\n👤 *Cliente:* ${v.cliente_nome}\n📱 *Aparelho:* ${v.itens}\n🚚 *Entrega:* ${v.endereco}`);
-                const msgCobranca = encodeURIComponent(`✅ *RESUMO PARA PAGAMENTO*\n\nOlá *${v.cliente_nome}*, para garantirmos o seu *${v.itens}*, segue os dados:\n\n💰 *Valor Total:* R$ ${parseFloat(v.total).toFixed(2).replace('.', ',')}\n💳 *Forma:* ${v.pagamento}\n\n💳 Formas de Pagamento Aceitas:\n• PIX\n• Cartão de Crédito\n• Crediário da Loja\n• Dinheiro\n\n👉 Qual forma de pagamento você prefere?`);
+                const msgCobranca = encodeURIComponent(`✅ *RESUMO PARA PAGAMENTO*\n\nOlá *${v.cliente_nome}*, para garantirmos o seu *${v.itens}*, segue os dados:\n\n💰 *Valor Total:* R$ ${parseFloat(v.total).toFixed(2).replace('.', ',')}\n💳 *Forma:* ${v.pagamento}\n\nÓtimo! 😄 Agora vamos continuar com o método de pagamento que você escolheu no site.`);
 
                 return `
                 <div class="glass-card p-6 rounded-[2.5rem] border border-white/5 hover:border-white/10 transition-all">
