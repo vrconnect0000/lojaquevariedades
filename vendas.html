@@ -27,9 +27,20 @@
                 <h1 class="text-3xl font-extrabold tracking-tighter italic text-white">OQUE? VARIEDADES</h1>
                 <p class="text-gray-500 text-sm">Painel de Gestão de Vendas</p>
             </div>
-            <button onclick="buscarVendas()" class="bg-white text-black px-6 py-2 rounded-full font-bold text-xs hover:bg-gray-200 transition shadow-lg shadow-white/5">
-                <i class="fa-solid fa-rotate mr-2"></i> SINCRONIZAR AGORA
-            </button>
+            
+            <div class="flex items-center gap-6">
+                <div onclick="limparNotificacoes()" class="relative cursor-pointer hover:opacity-80 transition">
+                    <i class="fa-solid fa-bell text-white text-xl"></i>
+                    <span id="notif-badge" class="absolute -top-1 -right-1 flex h-3 w-3">
+                        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-3 w-3 bg-red-500"></span>
+                    </span>
+                </div>
+
+                <button onclick="buscarVendas()" class="bg-white text-black px-6 py-2 rounded-full font-bold text-xs hover:bg-gray-200 transition shadow-lg shadow-white/5">
+                    <i class="fa-solid fa-rotate mr-2"></i> SINCRONIZAR AGORA
+                </button>
+            </div>
         </header>
 
         <div id="vendas-container" class="space-y-6">
@@ -47,6 +58,11 @@
             if (!error) renderVendas(data);
         }
 
+        function limparNotificacoes() {
+            const badge = document.getElementById('notif-badge');
+            if (badge) badge.style.display = 'none';
+        }
+
         function renderVendas(vendas) {
             const container = document.getElementById('vendas-container');
             if (vendas.length === 0) {
@@ -57,18 +73,9 @@
             container.innerHTML = vendas.map(v => {
                 const fone = v.cliente_whatsapp?.replace(/\D/g, '');
                 
-                // --- MENSAGENS CONFIGURADAS ---
                 const msgBoasVindas = encodeURIComponent(`Olá *${v.cliente_nome}*! 👋 Bem-vindo(a) à *OQUE? VARIEDADES*. Tudo bem?\n\nRecebemos seu interesse no produto *${v.itens}* e estou aqui para te ajudar a finalizar seu pedido!`);
-                
                 const msgDados = encodeURIComponent(`📍 *FICHA DO PEDIDO - OQUE? VARIEDADES*\n\n👤 *Cliente:* ${v.cliente_nome}\n📱 *Aparelho:* ${v.itens}\n🚚 *Entrega:* ${v.endereco}`);
-                
-                const msgCobranca = encodeURIComponent(`✅ *RESUMO PARA PAGAMENTO*\n\nOlá *${v.cliente_nome}*, para garantirmos o seu *${v.itens}*, segue os dados:\n\n💰 *Valor Total:* R$ ${parseFloat(v.total).toFixed(2).replace('.', ',')}\n💳 *Forma:* ${v.pagamento}\n\n💳 Formas de Pagamento Aceitas:
-• PIX
-• Cartão de Crédito
-• Crediário da Loja
-• Dinheiro
-
-👉 Qual forma de pagamento você prefere?`);
+                const msgCobranca = encodeURIComponent(`✅ *RESUMO PARA PAGAMENTO*\n\nOlá *${v.cliente_nome}*, para garantirmos o seu *${v.itens}*, segue os dados:\n\n💰 *Valor Total:* R$ ${parseFloat(v.total).toFixed(2).replace('.', ',')}\n💳 *Forma:* ${v.pagamento}\n\n💳 Formas de Pagamento Aceitas:\n• PIX\n• Cartão de Crédito\n• Crediário da Loja\n• Dinheiro\n\n👉 Qual forma de pagamento você prefere?`);
 
                 return `
                 <div class="glass-card p-6 rounded-[2.5rem] border border-white/5 hover:border-white/10 transition-all">
