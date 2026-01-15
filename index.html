@@ -3,10 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="theme-color" content="#070707">
-    <link rel="manifest" href="manifest.json">
-    <link rel="apple-touch-icon" href="icon-192.png">
-    
     <title>OQUE? VARIEDADES | Loja Oficial</title>
     
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700;800&family=Oswald:wght@700&display=swap" rel="stylesheet">
@@ -156,7 +152,7 @@
                 <span>TOTAL</span>
                 <span id="cart-total">R$ 0,00</span>
             </div>
-            <button onclick="checkoutWhatsApp()" class="btn-main bg-white text-black">Finalizar no WhatsApp</button>
+            <button onclick="finalizarPedido()" id="btn-finalizar" class="btn-main bg-white text-black">Finalizar Pedido</button>
         </div>
     </div>
 
@@ -179,21 +175,9 @@
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script>
-        // REGISTRO DO SERVICE WORKER PARA PWA
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js').then(reg => {
-                    console.log('PWA ativo.', reg.scope);
-                }).catch(err => {
-                    console.log('Erro no PWA:', err);
-                });
-            });
-        }
-
         AOS.init();
         const SUPABASE_URL = "https://zkhradhpwakvtgsilsyj.supabase.co"; 
         const SUPABASE_KEY = "sb_publishable_UrUxPsPD3XBTANwwp3tZOA_-REppnf3";
-        const WHATS_LOJA = "5596991078544"; 
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         let products = [], cart = [], currentCat = 'Todos';
 
@@ -246,7 +230,6 @@
                     <p class="text-sm text-gray-400 leading-relaxed">${p.descricao || ''}</p>
                     <div class="pt-4 space-y-3">
                         <button onclick="addToCart(${p.id})" class="btn-main bg-white text-black font-black border-none">Adicionar à Bag</button>
-                        <button onclick="window.open('https://wa.me/${WHATS_LOJA}?text=Olá! Tenho uma dúvida sobre: ${p.nome}')" class="w-full text-[10px] font-black uppercase py-3 border border-white/10 rounded-lg flex items-center justify-center gap-2"><i class="fa-brands fa-whatsapp text-green-500"></i> Dúvida sobre o produto</button>
                     </div>
                 </div>
             `;
@@ -259,9 +242,11 @@
             if (data?.nome) {
                 content.innerHTML = `
                     <div class="text-center mb-6"><div class="w-16 h-16 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-4"><i class="fa-solid fa-user text-2xl"></i></div><h2 class="font-black italic uppercase">Olá, ${data.nome.split(' ')[0]}</h2></div>
-                    <div class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6 space-y-1 text-xs">
-                        <p class="text-gray-500 uppercase font-black text-[9px]">Endereço Salvo</p>
-                        <p>${data.rua}, ${data.numero}</p><p>${data.bairro}</p><p class="italic text-gray-400 text-[10px]">${data.ref || ''}</p>
+                    <div class="bg-white/5 p-4 rounded-xl border border-white/10 mb-6 space-y-2 text-xs">
+                        <p class="text-gray-500 uppercase font-black text-[9px]">Seus Dados</p>
+                        <p><i class="fa-brands fa-whatsapp text-green-500"></i> ${data.whatsapp}</p>
+                        <p><i class="fa-solid fa-location-dot"></i> ${data.rua}, ${data.numero}</p>
+                        <p>${data.bairro}</p>
                     </div>
                     <button onclick="localStorage.removeItem('oque_profile');renderProfile()" class="w-full text-[10px] text-red-500 font-black uppercase mb-4">Sair do Perfil</button>
                     <button onclick="toggleProfile()" class="btn-main bg-white text-black font-black border-none">Voltar</button>
@@ -271,6 +256,7 @@
                     <h2 class="text-center font-black italic mb-6 uppercase text-sm">Dados de Entrega</h2>
                     <div class="space-y-3">
                         <input type="text" id="p-nome" placeholder="Nome Completo" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 text-sm outline-none">
+                        <input type="tel" id="p-whatsapp" placeholder="WhatsApp (DDD + Número)" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 text-sm outline-none">
                         <input type="text" id="p-rua" placeholder="Rua" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 text-sm outline-none">
                         <div class="flex gap-2"><input type="text" id="p-numero" placeholder="Nº" class="w-1/3 bg-white/5 p-4 rounded-xl border border-white/10 text-sm outline-none"><input type="text" id="p-bairro" placeholder="Bairro" class="w-2/3 bg-white/5 p-4 rounded-xl border border-white/10 text-sm outline-none"></div>
                         <input type="text" id="p-referencia" placeholder="Ponto de Referência" class="w-full bg-white/5 p-4 rounded-xl border border-white/10 text-sm outline-none">
@@ -282,8 +268,15 @@
         }
 
         function saveProfile() {
-            const d = { nome: document.getElementById('p-nome').value, rua: document.getElementById('p-rua').value, numero: document.getElementById('p-numero').value, bairro: document.getElementById('p-bairro').value, ref: document.getElementById('p-referencia').value };
-            if(!d.nome || !d.rua) return alert("Preencha os campos obrigatórios.");
+            const d = { 
+                nome: document.getElementById('p-nome').value, 
+                whatsapp: document.getElementById('p-whatsapp').value,
+                rua: document.getElementById('p-rua').value, 
+                numero: document.getElementById('p-numero').value, 
+                bairro: document.getElementById('p-bairro').value, 
+                ref: document.getElementById('p-referencia').value 
+            };
+            if(!d.nome || !d.whatsapp || !d.rua) return alert("Preencha Nome, WhatsApp e Rua.");
             localStorage.setItem('oque_profile', JSON.stringify(d)); renderProfile();
         }
 
@@ -304,39 +297,32 @@
             document.querySelectorAll('.cart-count-badge').forEach(b => b.innerText = cart.length);
         }
 
-        function checkoutWhatsApp() {
+        async function finalizarPedido() {
             const user = JSON.parse(localStorage.getItem('oque_profile'));
             if(!user?.nome) return toggleProfile();
             if(!cart.length) return alert("Sua sacola está vazia!");
 
-            const pgto = document.getElementById('pagamento-select').value;
-            const agora = new Date();
-            const dataPedido = agora.toLocaleDateString('pt-BR');
-            const horaPedido = agora.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
-            const numeroPedido = Math.floor(Math.random() * 9000) + 1000;
-            const total = cart.reduce((a, b) => a + parseFloat(b.preco), 0);
+            const btn = document.getElementById('btn-finalizar');
+            btn.disabled = true; btn.innerText = "ENVIANDO...";
 
-            let msg = `🚀 *NOVO PEDIDO - OQUE? VARIEDADES*\n\n`;
-            msg += `📅 *DATA:* ${dataPedido} às ${horaPedido}\n`;
-            msg += `🆔 *PEDIDO:* #${numeroPedido}\n\n`;
-            msg += `📦 *ITENS:*\n`;
+            const { error } = await _supabase.from('vendas').insert([{
+                cliente_nome: user.nome,
+                cliente_whatsapp: user.whatsapp,
+                endereco: `${user.rua}, ${user.numero} - ${user.bairro}`,
+                referencia: user.ref,
+                itens: cart.map(i => i.nome).join(', '),
+                total: cart.reduce((a, b) => a + parseFloat(b.preco), 0),
+                pagamento: document.getElementById('pagamento-select').value,
+                status: 'Pendente'
+            }]);
 
-            cart.forEach(p => {
-                msg += `• ${p.nome} - R$ ${parseFloat(p.preco).toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n`;
-            });
-
-            msg += `\n💳 *PAGAMENTO:* ${pgto.toUpperCase()}\n`;
-            msg += `💰 *TOTAL:* R$ ${total.toLocaleString('pt-BR', {minimumFractionDigits: 2})}\n\n`;
-
-            msg += `🚚 *ENTREGA:*\n`;
-            msg += `👤 Cliente: ${user.nome}\n`;
-            msg += `📍 ${user.rua}, ${user.numero}\n`;
-            msg += `🏘️ ${user.bairro} | Laranjal do Jari-AP\n`;
-            msg += `🔍 Ref: ${user.ref || 'Não informado'}\n\n`;
-
-            msg += `🙏 *Obrigado pela preferência!*`;
-
-            window.open(`https://wa.me/${WHATS_LOJA}?text=${encodeURIComponent(msg)}`);
+            if(!error) {
+                alert("Pedido enviado com sucesso!");
+                cart = []; updateCartUI(); toggleCart();
+            } else {
+                alert("Erro ao enviar. Tente novamente.");
+            }
+            btn.disabled = false; btn.innerText = "Finalizar Pedido";
         }
 
         function toggleSearch() { document.getElementById('search-bar').classList.toggle('active'); }
