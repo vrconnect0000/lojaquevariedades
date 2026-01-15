@@ -1,19 +1,16 @@
-const CACHE_NAME = 'oque-cache-v1';
-const urlsToCache = [
-  '/',
-  '/index.html',
-  'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;700;800&family=Oswald:wght@700&display=swap',
-  'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css'
-];
+const CACHE_NAME = 'oque-variedades-v1';
+const assets = ['/'];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(urlsToCache))
+    caches.open(CACHE_NAME).then(cache => {
+      cache.addAll(assets);
+    })
   );
 });
 
 self.addEventListener('fetch', event => {
   event.respondWith(
-    caches.match(event.request).then(response => response || fetch(event.request))
+    fetch(event.request).catch(() => caches.match(event.request))
   );
 });
