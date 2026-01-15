@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PAINEL PRIVADO | OQUE? VARIEDADES</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { background: #070707; color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
+        .glass { background: rgba(255, 255, 255, 0.03); border: 1px solid rgba(255, 255, 255, 0.08); backdrop-filter: blur(10px); }
+        input, textarea { background: rgba(255,255,255,0.05) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: white !important; outline: none !important; }
+        .file-card { border: 2px dashed rgba(255,255,255,0.1); border-radius: 16px; padding: 15px; text-align: center; cursor: pointer; transition: 0.3s; }
+        .file-card.has-file { border-color: #22c55e; background: rgba(34, 197, 94, 0.05); }
+        .input-update { width: 65px; padding: 4px; border-radius: 6px; font-size: 10px; text-align: center; border: 1px solid rgba(255,255,255,0.1); }
+        #login-screen { position: fixed; inset: 0; background: #070707; z-index: 9999; display: flex; align-items: center; justify-content: center; transition: 0.5s; }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div id="login-screen">
+        <div class="glass p-8 rounded-[40px] w-full max-w-sm text-center border-blue-500/20 shadow-2xl shadow-blue-500/10">
+            <div class="w-16 h-16 bg-blue-600/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fa-solid fa-shield-halved text-blue-500 text-2xl"></i>
+            </div>
+            <h2 class="text-xl font-black uppercase italic mb-2 tracking-tighter">OQUE? VARIEDADES
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest mb-6 font-bold">Acesso restrito ao proprietário</p>
+            
+            <input type="password" id="pass-input" onkeydown="if(event.key==='Enter') verificarSenha()" placeholder="Senha de Acesso" class="w-full p-4 rounded-2xl mb-4 text-center border-white/10">
+            <button onclick="verificarSenha()" class="w-full bg-blue-600 hover:bg-blue-500 transition-colors p-4 rounded-2xl font-black uppercase text-xs tracking-widest">
+                Entrar no Sistema
+            </button>
+            <div id="login-error" class="text-red-500 text-[10px] font-bold mt-4 uppercase hidden">Senha Incorreta!</div>
+        </div>
+    </div>
+
+    <div id="main-content" class="hidden max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-10">
+            <div>
+                <h1 class="text-2xl font-black italic text-blue-500 uppercase leading-none">OQUE? ADM</h1>
+                <p class="text-[9px] text-gray-500 font-bold uppercase mt-1 tracking-widest">Painel de Controle
+            </div>
+            <button onclick="logout()" class="bg-white/5 hover:bg-red-500/20 text-red-500 px-4 py-2 rounded-xl text-[10px] uppercase font-black transition-all">
+                Sair <i class="fa-solid fa-right-from-bracket ml-2"></i>
+            </button>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="lg:col-span-1">
+                <div class="glass p-6 rounded-[32px] sticky top-8">
+                    <h3 class="text-xs font-black uppercase mb-6 flex items-center gap-2">
+                        <i class="fa-solid fa-plus-circle text-blue-500"></i> Novo Produto
+                    </h3>
+                    <form id="product-form" class="space-y-4">
+                        <input type="text" id="p-nome" placeholder="Nome do Produto" class="w-full p-4 rounded-2xl text-sm" required>
+                        <div class="flex gap-2">
+                            <input type="number" id="p-preco" step="0.01" placeholder="Preço" class="w-1/2 p-4 rounded-2xl text-sm" required>
+                            <input type="number" id="p-promo" step="0.01" placeholder="Promo (opc)" class="w-1/2 p-4 rounded-2xl text-sm">
+                        </div>
+                        <input type="text" id="p-cat" placeholder="Categoria" class="w-full p-4 rounded-2xl text-sm" required>
+                        <textarea id="p-desc" placeholder="Descrição curta..." class="w-full p-4 rounded-2xl text-sm h-20 resize-none"></textarea>
+
+                        <div class="grid grid-cols-3 gap-2">
+                            <label class="file-card" id="card-f1"><input type="file" id="f1" class="hidden" accept="image/*" onchange="preview(this, 'n1', 'card-f1')"><p id="n1" class="text-[8px] uppercase truncate">Foto 1</p></label>
+                            <label class="file-card" id="card-f2"><input type="file" id="f2" class="hidden" accept="image/*" onchange="preview(this, 'n2', 'card-f2')"><p id="n2" class="text-[8px] uppercase truncate">Foto 2</p></label>
+                            <label class="file-card" id="card-f3"><input type="file" id="f3" class="hidden" accept="image/*" onchange="preview(this, 'n3', 'card-f3')"><p id="n3" class="text-[8px] uppercase truncate">Foto 3</p></label>
+                        </div>
+
+                        <button type="submit" id="btn-submit" class="w-full bg-blue-600 text-white font-black uppercase py-4 rounded-2xl text-xs mt-4 shadow-xl shadow-blue-900/20">Publicar Produto</button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2">
+                <div class="glass p-6 rounded-[32px]">
+                    <div class="relative mb-6">
+                        <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-blue-500 opacity-40"></i>
+                        <input type="text" id="search-input" oninput="filtrarLista(this.value)" placeholder="PESQUISAR NO INVENTÁRIO..." class="w-full pl-12 pr-4 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest">
+                    </div>
+                    <div id="inventory-list" class="space-y-3"></div>
+                    <div class="mt-10 pt-6 border-t border-white/5 flex justify-between items-center">
+                        <span id="counter" class="text-[9px] text-gray-500 uppercase font-black">0 Produtos</span>
+                        <button onclick="limparEstoque()" class="text-[9px] font-black uppercase text-red-500/30 hover:text-red-500 transition border border-red-500/10 hover:border-red-500/40 px-3 py-1 rounded-lg">
+                            Zerar Estoque
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // CONFIGURAÇÕES
+        const SENHA_CORRETA = "admin123"; // MUDE SUA SENHA AQUI
+        const SUPABASE_URL = "https://zkhradhpwakvtgsilsyj.supabase.co"; 
+        const SUPABASE_KEY = "sb_publishable_UrUxPsPD3XBTANwwp3tZOA_-REppnf3";
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let dadosLocais = [];
+
+        // SISTEMA DE LOGIN COM PERSISTÊNCIA
+        window.onload = () => {
+            const logado = localStorage.getItem('oque_variedades_admin');
+            if (logado === 'true') {
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                init();
+            }
+        };
+
+        function verificarSenha() {
+            const digitada = document.getElementById('pass-input').value;
+            const erroMsg = document.getElementById('login-error');
+            
+            if (digitada === SENHA_CORRETA) {
+                localStorage.setItem('oque_variedades_admin', 'true');
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                init();
+            } else {
+                erroMsg.classList.remove('hidden');
+                setTimeout(() => erroMsg.classList.add('hidden'), 2000);
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('oque_variedades_admin');
+            location.reload();
+        }
+
+        // GESTÃO DE PRODUTOS
+        async function init() {
+            const { data } = await _supabase.from('produtos').select('*').order('id', { ascending: false });
+            if (data) { 
+                dadosLocais = data; 
+                renderList(data); 
+                document.getElementById('counter').innerText = `${data.length} Produtos Cadastrados`;
+            }
+        }
+
+        function preview(input, id, cardId) {
+            if (input.files[0]) {
+                document.getElementById(id).innerText = input.files[0].name;
+                document.getElementById(cardId).classList.add('has-file');
+            }
+        }
+
+        async function uploadImage(file) {
+            if (!file) return null;
+            const name = `${Date.now()}_${file.name.replace(/[^a-zA-Z0-9.]/g, '')}`;
+            const { data, error } = await _supabase.storage.from('fotos').upload(name, file);
+            if (error) return null;
+            return _supabase.storage.from('fotos').getPublicUrl(name).data.publicUrl;
+        }
+
+        document.getElementById('product-form').onsubmit = async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-submit');
+            const f1 = document.getElementById('f1').files[0];
+            if (!f1) return alert("Selecione pelo menos a Foto 1");
+            
+            btn.innerText = "SINCRONIZANDO..."; btn.disabled = true;
+
+            const url1 = await uploadImage(f1);
+            const url2 = await uploadImage(document.getElementById('f2').files[0]);
+            const url3 = await uploadImage(document.getElementById('f3').files[0]);
+
+            await _supabase.from('produtos').insert([{
+                nome: document.getElementById('p-nome').value,
+                preco: parseFloat(document.getElementById('p-preco').value),
+                preco_promo: parseFloat(document.getElementById('p-promo').value) || null,
+                categoria: document.getElementById('p-cat').value,
+                descricao: document.getElementById('p-desc').value,
+                imagem_url: url1, imagem_url_2: url2, imagem_url_3: url3
+            }]);
+            location.reload();
+        };
+
+        function renderList(lista) {
+            document.getElementById('inventory-list').innerHTML = lista.map(p => `
+                <div class="flex items-center gap-4 p-4 rounded-2xl bg-white/[0.02] border border-white/5 hover:bg-white/[0.04] transition-all">
+                    <img src="${p.imagem_url}" class="w-12 h-12 rounded-xl object-cover bg-black">
+                    <div class="flex-1 text-[10px] font-bold uppercase truncate">${p.nome}</div>
+                    <div class="flex items-center gap-2">
+                        <div class="flex flex-col gap-1">
+                            <input type="number" id="up-p-${p.id}" value="${p.preco}" class="input-update" title="Preço Normal">
+                            <input type="number" id="up-pr-${p.id}" value="${p.preco_promo || ''}" placeholder="Promo" class="input-update text-orange-400">
+                        </div>
+                        <button onclick="atualizar(${p.id})" class="text-green-500 p-2 hover:bg-white/10 rounded-lg"><i class="fa-solid fa-check"></i></button>
+                    </div>
+                    <button onclick="deletar(${p.id})" class="text-red-500 opacity-20 hover:opacity-100 transition"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `).join('');
+        }
+
+        function filtrarLista(v) { renderList(dadosLocais.filter(p => p.nome.toLowerCase().includes(v.toLowerCase()))); }
+
+        async function atualizar(id) {
+            await _supabase.from('produtos').update({ 
+                preco: parseFloat(document.getElementById(`up-p-${id}`).value), 
+                preco_promo: document.getElementById(`up-pr-${id}`).value ? parseFloat(document.getElementById(`up-pr-${id}`).value) : null 
+            }).eq('id', id);
+            alert("Preço Atualizado!");
+        }
+
+        async function deletar(id) { if (confirm("Remover este produto?")) { await _supabase.from('produtos').delete().eq('id', id); init(); } }
+
+        async function limparEstoque() {
+            if (confirm("Deseja apagar TODO o inventário? Esta ação é irreversível!")) {
+                const { error } = await _supabase.from('produtos').delete().neq('id', 0);
+                if (error) alert("Erro!"); else init();
+            }
+        }
+    </script>
+</body>
+</html>
