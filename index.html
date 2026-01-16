@@ -18,6 +18,36 @@
             --glass-border: rgba(255, 255, 255, 0.08);
         }
 
+        #preloader {
+            position: fixed; inset: 0; background: var(--bg-dark);
+            z-index: 9999; display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            transition: opacity 0.6s ease, visibility 0.6s;
+        }
+        
+        .breathing-logo {
+            animation: breathe 2.5s ease-in-out infinite;
+        }
+
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 0.4; filter: blur(0px); }
+            50% { transform: scale(1.1); opacity: 1; filter: blur(1px); }
+        }
+
+        .loader-bar {
+            width: 150px; height: 2px; background: rgba(255,255,255,0.1);
+            border-radius: 10px; margin-top: 20px; overflow: hidden; position: relative;
+        }
+        .loader-progress {
+            width: 40%; height: 100%; background: #fff;
+            position: absolute; left: -100%;
+            animation: loading 1.5s infinite cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes loading {
+            0% { left: -40%; }
+            100% { left: 100%; }
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-dark); color: #fff; font-family: 'Plus Jakarta Sans', sans-serif; overflow-x: hidden; }
 
@@ -104,7 +134,6 @@
         .thumb-img { width: 60px; height: 60px; object-fit: contain; background: #111; border: 1px solid var(--glass-border); border-radius: 8px; cursor: pointer; }
         .thumb-img.active { border-color: #fff; }
 
-        /* Estilo da Mensagem de Sucesso TOP */
         #success-modal {
             position: fixed; inset: 0; background: rgba(0,0,0,0.9);
             backdrop-filter: blur(15px); z-index: 5000;
@@ -118,6 +147,13 @@
     </style>
 </head>
 <body>
+
+    <div id="preloader">
+        <div class="logo-text breathing-logo">OQUE? <span style="font-weight: 300; opacity: 0.5; font-size: 0.6em;">VARIEDADES</span></div>
+        <div class="loader-bar">
+            <div class="loader-progress"></div>
+        </div>
+    </div>
 
     <div id="success-modal">
         <div class="success-card" data-aos="zoom-in">
@@ -205,10 +241,18 @@
         let products = [], cart = [], currentCat = 'Todos';
 
         async function fetchProducts() {
-            const { data } = await _supabase.from('produtos').select('*').order('id', { ascending: false });
-            products = data || [];
-            setupCategories();
-            renderProducts(products);
+            try {
+                const { data } = await _supabase.from('produtos').select('*').order('id', { ascending: false });
+                products = data || [];
+                setupCategories();
+                renderProducts(products);
+            } catch (e) {
+                console.error(e);
+            } finally {
+                const preloader = document.getElementById('preloader');
+                preloader.style.opacity = '0';
+                setTimeout(() => preloader.style.visibility = 'hidden', 600);
+            }
         }
 
         function setupCategories() {
@@ -230,18 +274,31 @@
         }
 
         function renderProducts(lista) {
-            document.getElementById('product-grid').innerHTML = lista.map(p => `
-                <div class="product-card" onclick="showProductDetails(${p.id})" data-aos="fade-up">
-                    <div class="img-wrapper"><img src="${p.imagem_url}" loading="lazy"></div>
-                    <h3 class="text-[10px] font-bold uppercase opacity-40 truncate">${p.nome}</h3>
-                    <p class="text-lg font-black italic">R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p>
-                </div>
-            `).join('');
+            document.getElementById('product-grid').innerHTML = lista.map(p => {
+                const precoNum = parseFloat(p.preco);
+                const precoAntigoNum = p.preco_antigo ? parseFloat(p.preco_antigo) : 0;
+                const temDesconto = precoAntigoNum > precoNum;
+
+                return `
+                    <div class="product-card" onclick="showProductDetails(${p.id})" data-aos="fade-up">
+                        <div class="img-wrapper"><img src="${p.imagem_url}" loading="lazy"></div>
+                        <h3 class="text-[10px] font-bold uppercase opacity-40 truncate">${p.nome}</h3>
+                        <div class="flex items-baseline gap-2">
+                            <p class="text-lg font-black italic">R$ ${precoNum.toFixed(2).replace('.', ',')}</p>
+                            ${temDesconto ? `<span class="text-[10px] line-through opacity-30 italic">R$ ${precoAntigoNum.toFixed(2).replace('.', ',')}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
 
         function showProductDetails(id) {
             const p = products.find(x => x.id === id);
             const imgs = [p.imagem_url, p.imagem_url_2, p.imagem_url_3, p.imagem_url_4].filter(u => u);
+            const precoNum = parseFloat(p.preco);
+            const precoAntigoNum = p.preco_antigo ? parseFloat(p.preco_antigo) : 0;
+            const temDesconto = precoAntigoNum > precoNum;
+
             document.getElementById('details-body').innerHTML = `
                 <div class="space-y-6">
                     <div class="w-full aspect-square bg-black rounded-2xl flex items-center justify-center overflow-hidden">
@@ -249,7 +306,10 @@
                     </div>
                     <div class="flex gap-2 overflow-x-auto hide-scroll">${imgs.map((u, i) => `<img src="${u}" onclick="document.getElementById('main-view-img').src='${u}'" class="thumb-img">`).join('')}</div>
                     <h2 class="text-3xl font-black italic uppercase">${p.nome}</h2>
-                    <p class="text-2xl font-bold">R$ ${parseFloat(p.preco).toFixed(2).replace('.', ',')}</p>
+                    <div class="flex items-center gap-3">
+                        <p class="text-2xl font-bold">R$ ${precoNum.toFixed(2).replace('.', ',')}</p>
+                        ${temDesconto ? `<span class="text-sm line-through opacity-40 font-black italic">R$ ${precoAntigoNum.toFixed(2).replace('.', ',')}</span>` : ''}
+                    </div>
                     <p class="text-sm text-gray-400 leading-relaxed">${p.descricao || ''}</p>
                     <div class="pt-4 space-y-3">
                         <button onclick="addToCart(${p.id})" class="btn-main bg-white text-black font-black border-none">Adicionar à Bag</button>
@@ -340,7 +400,6 @@
             }]);
 
             if(!error) {
-                // EXIBE O MODAL ELEGANTE EM VEZ DO ALERT
                 document.getElementById('success-modal').style.display = 'flex';
                 cart = []; updateCartUI(); toggleCart();
             } else {
